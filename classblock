@@ -1,0 +1,55 @@
+package classblock;
+
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Date;
+
+class Block {
+    public String hash;
+    public String previousHash;
+    private String data; // Transaction data
+    private long timeStamp;
+
+    public Block(String data, String previousHash) {
+        this.data = data;
+        this.previousHash = previousHash;
+        this.timeStamp = new Date().getTime();
+        this.hash = calculateHash();
+    }
+
+    public String calculateHash() {
+        String input = previousHash + Long.toString(timeStamp) + data;
+        return applySha256(input);
+    }
+
+    public static String applySha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes("UTF-8"));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+public class Blockchain {
+    public static ArrayList<Block> blockchain = new ArrayList<>();
+
+    public static void main(String[] args) {
+        blockchain.add(new Block("Genesis Block", "0"));
+        blockchain.add(new Block("Transaction 1: Alice -> Bob $50", blockchain.get(blockchain.size() - 1).hash));
+        blockchain.add(new Block("Transaction 2: Bob -> Charlie $30", blockchain.get(blockchain.size() - 1).hash));
+
+        for (Block block : blockchain) {
+            System.out.println("Hash: " + block.hash);
+            System.out.println("Previous Hash: " + block.previousHash);
+        }
+    }
+}
